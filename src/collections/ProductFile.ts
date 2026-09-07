@@ -1,4 +1,4 @@
-import { User } from '../payload-types'
+import { Product, User } from '../payload-types'
 import { BeforeChangeHook } from 'payload/dist/collections/config/types'
 import { Access, CollectionConfig } from 'payload/types'
 
@@ -39,7 +39,7 @@ const yourOwnAndPurchased: Access = async ({ req }) => {
 
   const purchasedProductFileIds = orders
     .map((order) => {
-      return order.products.map((product) => {
+      return ((order.products || []) as (string | Product)[]).map((product) => {
         if (typeof product === 'string')
           return req.payload.logger.error(
             'Search depth not sufficient to find purchased file IDs'

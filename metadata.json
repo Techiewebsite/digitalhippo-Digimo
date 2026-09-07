@@ -1,0 +1,8 @@
+{
+  "name": "DigitalHippo",
+  "description": "An open-source marketplace for high-quality digital goods built with Next.js, PayloadCMS, Express, and Tailwind CSS.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

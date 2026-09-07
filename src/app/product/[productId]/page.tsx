@@ -8,6 +8,7 @@ import { formatPrice } from '@/lib/utils'
 import { Check, Shield } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Product } from '@/payload-types'
 
 interface PageProps {
   params: {
@@ -38,7 +39,7 @@ const Page = async ({ params }: PageProps) => {
     },
   })
 
-  const [product] = products
+  const [product] = products as unknown as Product[]
 
   if (!product) return notFound()
 

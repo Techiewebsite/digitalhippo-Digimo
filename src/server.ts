@@ -13,7 +13,7 @@ import { PayloadRequest } from 'payload/types'
 import { parse } from 'url'
 
 const app = express()
-const PORT = Number(process.env.PORT) || 3000
+const PORT = 3000
 
 const createContext = ({
   req,
@@ -54,18 +54,14 @@ const start = async () => {
   })
 
   if (process.env.NEXT_BUILD) {
-    app.listen(PORT, async () => {
-      payload.logger.info(
-        'Next.js is building for production'
-      )
+    payload.logger.info(
+      'Next.js is building for production'
+    )
 
-      // @ts-expect-error
-      await nextBuild(path.join(__dirname, '../'))
+    // @ts-expect-error
+    await nextBuild(path.join(__dirname, '../'))
 
-      process.exit()
-    })
-
-    return
+    process.exit()
   }
 
   const cartRouter = express.Router()
@@ -98,7 +94,7 @@ const start = async () => {
   nextApp.prepare().then(() => {
     payload.logger.info('Next.js started')
 
-    app.listen(PORT, async () => {
+    app.listen(PORT, '0.0.0.0', async () => {
       payload.logger.info(
         `Next.js App URL: ${process.env.NEXT_PUBLIC_SERVER_URL}`
       )

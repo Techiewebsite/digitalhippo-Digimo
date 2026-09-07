@@ -39,7 +39,7 @@ export const paymentRouter = router({
         collection: 'orders',
         data: {
           _isPaid: false,
-          products: filteredProducts.map((prod) => prod.id),
+          products: filteredProducts.map((prod) => prod.id as string),
           user: user.id,
         },
       })
@@ -49,7 +49,7 @@ export const paymentRouter = router({
 
       filteredProducts.forEach((product) => {
         line_items.push({
-          price: product.priceId!,
+          price: product.priceId as string,
           quantity: 1,
         })
       })
