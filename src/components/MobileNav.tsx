@@ -1,6 +1,7 @@
 'use client'
 
 import { PRODUCT_CATEGORIES } from '@/config'
+import { Icons } from './Icons'
 import { Menu, X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -51,7 +52,14 @@ const MobileNav = () => {
       <div className='fixed overflow-y-scroll overscroll-y-none inset-0 z-40 flex'>
         <div className='w-4/5'>
           <div className='relative flex w-full max-w-sm flex-col overflow-y-auto bg-white pb-12 shadow-xl'>
-            <div className='flex px-4 pb-2 pt-5'>
+            <div className='flex items-center justify-between px-4 pb-2 pt-5 border-b border-gray-100'>
+              <Link
+                href='/'
+                onClick={() => setIsOpen(false)}
+                className='flex items-center gap-2'>
+                <Icons.logo className='h-8 w-8 object-contain rounded-md' />
+                <span className='font-bold text-lg text-gray-900'>Bovira</span>
+              </Link>
               <button
                 type='button'
                 onClick={() => setIsOpen(false)}

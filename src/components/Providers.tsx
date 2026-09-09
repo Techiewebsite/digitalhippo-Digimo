@@ -5,35 +5,25 @@ import {
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query'
-import { trpc } from '@/trpc/client'
-import { httpBatchLink } from '@trpc/client'
+import { AuthProvider } from '@/context/auth-context'
 
 const Providers = ({ children }: PropsWithChildren) => {
-  const [queryClient] = useState(() => new QueryClient())
-  const [trpcClient] = useState(() =>
-    trpc.createClient({
-      links: [
-        httpBatchLink({
-          url: `${process.env.NEXT_PUBLIC_SERVER_URL || ''}/api/trpc`,
-          fetch(url, options) {
-            return fetch(url, {
-              ...options,
-              credentials: 'include',
-            })
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            refetchOnWindowFocus: false,
+            staleTime: 1000 * 60 * 5, // 5 minutes
           },
-        }),
-      ],
-    })
+        },
+      })
   )
 
   return (
-    <trpc.Provider
-      client={trpcClient}
-      queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    </trpc.Provider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>{children}</AuthProvider>
+    </QueryClientProvider>
   )
 }
 

@@ -1,3 +1,15 @@
+export const SITE_NAME = 'Bovira'
+export const SITE_LOGO_URL =
+  'https://res.cloudinary.com/cewhx4ry/image/upload/v1788942132/grok_1788941655698.jpg'
+
+export const SITE_CONFIG = {
+  name: 'Bovira',
+  description:
+    'Bovira is an open-source marketplace for high-quality digital goods.',
+  logoUrl: SITE_LOGO_URL,
+  url: 'https://digitalhippo.netlify.app',
+}
+
 export const PRODUCT_CATEGORIES = [
   {
     label: 'UI Kits',

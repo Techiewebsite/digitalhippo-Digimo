@@ -1,8 +1,9 @@
 'use client'
 
 import { TQueryValidator } from '@/lib/validators/query-validator'
-import { Product } from '@/payload-types'
-import { trpc } from '@/trpc/client'
+import { Product } from '@/types'
+import { useQuery } from '@tanstack/react-query'
+import { productsService } from '@/lib/appwrite/products'
 import Link from 'next/link'
 import ProductListing from './ProductListing'
 
@@ -18,24 +19,26 @@ const FALLBACK_LIMIT = 4
 const ProductReel = (props: ProductReelProps) => {
   const { title, subtitle, href, query } = props
 
-  const { data: queryResults, isLoading } =
-    trpc.getInfiniteProducts.useInfiniteQuery(
-      {
+  const { data: queryResults, isLoading } = useQuery({
+    queryKey: [
+      'products',
+      query.category,
+      query.sort,
+      query.limit ?? FALLBACK_LIMIT,
+    ],
+    queryFn: () =>
+      productsService.getProducts({
+        category: query.category,
+        sort: query.sort,
         limit: query.limit ?? FALLBACK_LIMIT,
-        query,
-      },
-      {
-        getNextPageParam: (lastPage) => lastPage.nextPage,
-      }
-    )
+      }),
+  })
 
-  const products = queryResults?.pages.flatMap(
-    (page) => page.items
-  )
+  const products = queryResults?.items
 
   let map: (Product | null)[] = []
   if (products && products.length) {
-    map = products as unknown as Product[]
+    map = products
   } else if (isLoading) {
     map = new Array<null>(
       query.limit ?? FALLBACK_LIMIT

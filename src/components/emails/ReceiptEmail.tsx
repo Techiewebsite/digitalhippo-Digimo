@@ -40,17 +40,17 @@ export const ReceiptEmail = ({
   return (
     <Html>
       <Head />
-      <Preview>Your DigitalHippo Receipt</Preview>
+      <Preview>Your Bovira Receipt</Preview>
 
       <Body style={main}>
         <Container style={container}>
           <Section>
             <Column>
               <Img
-                src={`${process.env.NEXT_PUBLIC_SERVER_URL}/hippo-email-sent.png`}
-                width='100'
-                height='100'
-                alt='DigitalHippo'
+                src='https://res.cloudinary.com/cewhx4ry/image/upload/v1788942132/grok_1788941655698.jpg'
+                width='80'
+                height='80'
+                alt='Bovira'
               />
             </Column>
 
@@ -129,7 +129,7 @@ export const ReceiptEmail = ({
                     </Text>
                   ) : null}
                   <Link
-                    href={`${process.env.NEXT_PUBLIC_SERVER_URL}/thank-you?orderId=${orderId}`}
+                    href={`${process.env.NEXT_PUBLIC_SERVER_URL || ''}/thank-you?orderId=${orderId}`}
                     style={productLink}>
                     Download Asset
                   </Link>
@@ -188,7 +188,7 @@ export const ReceiptEmail = ({
             <Link href='#'>Privacy Policy </Link>
           </Text>
           <Text style={footerCopyright}>
-            Copyright © 2023 DigitalHippo Inc. <br />{' '}
+            Copyright © 2023 Bovira Inc. <br />{' '}
             <Link href='#'>All rights reserved</Link>
           </Text>
         </Container>

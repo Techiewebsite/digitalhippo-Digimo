@@ -1,5 +1,6 @@
 import MaxWidthWrapper from '@/components/MaxWidthWrapper'
-import ProductReel from '@/components/ProductReel'
+import PricingSection from '@/components/PricingSection'
+import BecomeSellerHeroCard from '@/components/BecomeSellerHeroCard'
 import {
   Button,
   buttonVariants,
@@ -45,28 +46,31 @@ export default function Home() {
             .
           </h1>
           <p className='mt-6 text-lg max-w-prose text-muted-foreground'>
-            Welcome to DigitalHippo. Every asset on our
+            Welcome to Bovira. Every asset on our
             platform is verified by our team to ensure our
             highest quality standards.
           </p>
-          <div className='flex flex-col sm:flex-row gap-4 mt-6'>
+
+          {/* Eye-catching animated Become a seller highlight section */}
+          <BecomeSellerHeroCard />
+
+          <div className='flex flex-col sm:flex-row gap-4 mt-2'>
             <Link
               href='/products'
               className={buttonVariants()}>
               Browse Trending
             </Link>
-            <Button variant='ghost'>
-              Our quality promise &rarr;
-            </Button>
+            <Link
+              href='#pricing'
+              className={buttonVariants({ variant: 'ghost' })}>
+              Creator plans &rarr;
+            </Link>
           </div>
         </div>
-
-        <ProductReel
-          query={{ sort: 'desc', limit: 4 }}
-          href='/products?sort=recent'
-          title='Brand new'
-        />
       </MaxWidthWrapper>
+
+      {/* Creator Pricing & Seller Conversion Section */}
+      <PricingSection />
 
       <section className='border-t border-gray-200 bg-gray-50'>
         <MaxWidthWrapper className='py-20'>

@@ -9,20 +9,25 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
+import { useState } from 'react'
 
 import {
   AuthCredentialsValidator,
   TAuthCredentialsValidator,
 } from '@/lib/validators/account-credentials-validator'
-import { trpc } from '@/trpc/client'
 import { toast } from 'sonner'
 import { ZodError } from 'zod'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/hooks/use-auth'
 
 const Page = () => {
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const { signUp } = useAuth()
+  const router = useRouter()
+
   const {
     register,
     handleSubmit,
@@ -31,42 +36,31 @@ const Page = () => {
     resolver: zodResolver(AuthCredentialsValidator),
   })
 
-  const router = useRouter()
-
-  const { mutate, isLoading } =
-    trpc.auth.createPayloadUser.useMutation({
-      onError: (err) => {
-        if (err.data?.code === 'CONFLICT') {
-          toast.error(
-            'This email is already in use. Sign in instead?'
-          )
-
-          return
-        }
-
-        if (err instanceof ZodError) {
-          toast.error(err.issues[0].message)
-
-          return
-        }
-
-        toast.error(
-          'Something went wrong. Please try again.'
-        )
-      },
-      onSuccess: ({ sentToEmail }) => {
-        toast.success(
-          `Verification email sent to ${sentToEmail}.`
-        )
-        router.push('/verify-email?to=' + sentToEmail)
-      },
-    })
-
-  const onSubmit = ({
+  const onSubmit = async ({
     email,
     password,
   }: TAuthCredentialsValidator) => {
-    mutate({ email, password })
+    setIsLoading(true)
+    try {
+      const res = await signUp({ email, password })
+      toast.success(`Verification email sent to ${res.sentToEmail}.`)
+      router.push('/verify-email?to=' + res.sentToEmail)
+    } catch (err: unknown) {
+      const error = err as { code?: string; message?: string }
+      if (error.code === 'CONFLICT' || error.message?.includes('already in use')) {
+        toast.error('This email is already in use. Sign in instead?')
+        return
+      }
+
+      if (err instanceof ZodError) {
+        toast.error(err.issues[0].message)
+        return
+      }
+
+      toast.error(error.message || 'Something went wrong. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -128,7 +122,12 @@ const Page = () => {
                   )}
                 </div>
 
-                <Button>Sign up</Button>
+                <Button disabled={isLoading}>
+                  {isLoading && (
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                  )}
+                  Sign up
+                </Button>
               </div>
             </form>
           </div>

@@ -3,12 +3,11 @@ import ImageSlider from '@/components/ImageSlider'
 import MaxWidthWrapper from '@/components/MaxWidthWrapper'
 import ProductReel from '@/components/ProductReel'
 import { PRODUCT_CATEGORIES } from '@/config'
-import { getPayloadClient } from '@/get-payload'
 import { formatPrice } from '@/lib/utils'
 import { Check, Shield } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Product } from '@/payload-types'
+import { productsService } from '@/lib/appwrite/products'
 
 interface PageProps {
   params: {
@@ -24,22 +23,7 @@ const BREADCRUMBS = [
 const Page = async ({ params }: PageProps) => {
   const { productId } = params
 
-  const payload = await getPayloadClient()
-
-  const { docs: products } = await payload.find({
-    collection: 'products',
-    limit: 1,
-    where: {
-      id: {
-        equals: productId,
-      },
-      approvedForSale: {
-        equals: 'approved',
-      },
-    },
-  })
-
-  const [product] = products as unknown as Product[]
+  const product = await productsService.getProductById(productId)
 
   if (!product) return notFound()
 
@@ -49,7 +33,7 @@ const Page = async ({ params }: PageProps) => {
 
   const validUrls = product.images
     .map(({ image }) =>
-      typeof image === 'string' ? image : image.url
+      typeof image === 'string' ? image : image?.url
     )
     .filter(Boolean) as string[]
 

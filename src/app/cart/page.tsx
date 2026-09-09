@@ -4,24 +4,20 @@ import { Button } from '@/components/ui/button'
 import { PRODUCT_CATEGORIES } from '@/config'
 import { useCart } from '@/hooks/use-cart'
 import { cn, formatPrice } from '@/lib/utils'
-import { trpc } from '@/trpc/client'
 import { Check, Loader2, X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { useAuth } from '@/hooks/use-auth'
+import { toast } from 'sonner'
+import { ordersService } from '@/lib/appwrite/orders'
 
 const Page = () => {
-  const { items, removeItem } = useCart()
-
+  const { items, removeItem, clearCart } = useCart()
+  const { user } = useAuth()
   const router = useRouter()
-
-  const { mutate: createCheckoutSession, isLoading } =
-    trpc.payment.createSession.useMutation({
-      onSuccess: ({ url }) => {
-        if (url) router.push(url)
-      },
-    })
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const productIds = items.map(({ product }) => product.id)
 
@@ -36,6 +32,63 @@ const Page = () => {
   )
 
   const fee = 1
+
+  const handleCheckout = async () => {
+    if (items.length === 0) return
+
+    if (!user) {
+      router.push('/sign-in?origin=cart')
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const settlementAmountXOF = Math.round((cartTotal + fee) * 600)
+
+      // 1. Prepare / create order in Appwrite with authoritative XOF settlement amount
+      const order = await ordersService.createOrder({
+        userId: user.id,
+        userEmail: user.email,
+        products: items.map((i) => i.product),
+        amount: settlementAmountXOF,
+        currency: 'XOF',
+        isPaid: false,
+      })
+
+      // 2. Call secure server-side payment endpoint (Netlify Function / API)
+      const res = await fetch('/api/create-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productIds,
+          orderId: order.id,
+          userId: user.id,
+          userEmail: user.email,
+          origin: window.location.origin,
+        }),
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to initiate checkout session')
+      }
+
+      const data = await res.json()
+      if (data.url) {
+        clearCart()
+        router.push(data.url)
+      } else {
+        throw new Error('No payment URL returned')
+      }
+    } catch (err: unknown) {
+      const error = err as Error
+      toast.error(error.message || 'Something went wrong with checkout. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className='bg-white'>
@@ -197,28 +250,58 @@ const Page = () => {
                 <div className='text-base font-medium text-gray-900'>
                   Order Total
                 </div>
-                <div className='text-base font-medium text-gray-900'>
-                  {isMounted ? (
-                    formatPrice(cartTotal + fee)
-                  ) : (
-                    <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
+                <div className='text-right'>
+                  <div className='text-base font-bold text-gray-900'>
+                    {isMounted ? (
+                      formatPrice(cartTotal + fee)
+                    ) : (
+                      <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
+                    )}
+                  </div>
+                  {isMounted && (
+                    <div className='text-xs text-muted-foreground'>
+                      ≈ {((cartTotal + fee) * 600).toLocaleString('fr-FR')} XOF
+                    </div>
                   )}
                 </div>
               </div>
             </div>
 
+            {/* SebPay Payment Method Details */}
+            <div className='mt-6 border-t border-gray-200 pt-4'>
+              <p className='text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2'>
+                Payment Method
+              </p>
+              <div className='rounded-lg border-2 border-primary/40 bg-primary/5 p-3 flex items-center justify-between'>
+                <div className='flex items-center gap-2.5'>
+                  <div className='h-3.5 w-3.5 rounded-full bg-primary flex items-center justify-center ring-2 ring-primary ring-offset-2' />
+                  <div>
+                    <div className='flex items-center gap-1.5'>
+                      <p className='text-sm font-semibold text-gray-900'>SebPay</p>
+                      <span className='rounded bg-emerald-100 px-1.5 py-0.2 text-[10px] font-semibold text-emerald-800'>
+                        Live
+                      </span>
+                    </div>
+                    <p className='text-xs text-muted-foreground'>
+                      Mobile Money (MTN, Moov, Orange) & Cards
+                    </p>
+                  </div>
+                </div>
+                <span className='text-xs font-bold text-primary'>XOF</span>
+              </div>
+            </div>
+
             <div className='mt-6'>
               <Button
+                id='pay-with-sebpay-button'
                 disabled={items.length === 0 || isLoading}
-                onClick={() =>
-                  createCheckoutSession({ productIds })
-                }
+                onClick={handleCheckout}
                 className='w-full'
                 size='lg'>
                 {isLoading ? (
                   <Loader2 className='w-4 h-4 animate-spin mr-1.5' />
                 ) : null}
-                Checkout
+                Pay with SebPay
               </Button>
             </div>
           </section>

@@ -1,13 +1,11 @@
-import { getServerSideUser } from '@/lib/payload-utils'
 import Image from 'next/image'
-import { cookies } from 'next/headers'
-import { getPayloadClient } from '@/get-payload'
-import { notFound, redirect } from 'next/navigation'
-import { Order, Product, ProductFile, User } from '@/payload-types'
+import { notFound } from 'next/navigation'
+import { Order, Product, ProductFile, User } from '@/types'
 import { PRODUCT_CATEGORIES } from '@/config'
 import { formatPrice } from '@/lib/utils'
 import Link from 'next/link'
 import PaymentStatus from '@/components/PaymentStatus'
+import { ordersService } from '@/lib/appwrite/orders'
 
 interface PageProps {
   searchParams: {
@@ -19,41 +17,25 @@ const ThankYouPage = async ({
   searchParams,
 }: PageProps) => {
   const orderId = searchParams.orderId
-  const nextCookies = cookies()
 
-  const { user } = await getServerSideUser(nextCookies)
-  const payload = await getPayloadClient()
+  if (!orderId || typeof orderId !== 'string') {
+    return notFound()
+  }
 
-  const { docs: orders } = await payload.find({
-    collection: 'orders',
-    depth: 2,
-    where: {
-      id: {
-        equals: orderId,
-      },
-    },
-  })
-
-  const [order] = orders as unknown as Order[]
+  const order = await ordersService.getOrderById(orderId)
 
   if (!order) return notFound()
 
-  const orderUserId =
-    typeof order.user === 'string'
-      ? order.user
-      : order.user.id
-
-  if (orderUserId !== user?.id) {
-    return redirect(
-      `/sign-in?origin=thank-you?orderId=${order.id}`
-    )
-  }
-
-  const products = order.products as Product[]
+  const products = (order.products || []) as Product[]
 
   const orderTotal = products.reduce((total, product) => {
-    return total + product.price
+    return total + (product.price || 0)
   }, 0)
+
+  const orderEmail =
+    typeof order.user === 'string'
+      ? 'customer@example.com'
+      : (order.user as User)?.email || 'customer@example.com'
 
   return (
     <main className='relative lg:min-h-full'>
@@ -80,11 +62,9 @@ const ThankYouPage = async ({
                 Your order was processed and your assets are
                 available to download below. We&apos;ve sent
                 your receipt and order details to{' '}
-                {typeof order.user !== 'string' ? (
-                  <span className='font-medium text-gray-900'>
-                    {order.user.email}
-                  </span>
-                ) : null}
+                <span className='font-medium text-gray-900'>
+                  {orderEmail}
+                </span>
                 .
               </p>
             ) : (
@@ -103,30 +83,33 @@ const ThankYouPage = async ({
                 {order.id}
               </div>
 
-              <ul className='mt-6 divide-y divide-gray-200 border-t border-gray-200 text-sm font-medium text-muted-foreground'>
-                {(order.products as Product[]).map(
-                  (product) => {
+              {products.length > 0 ? (
+                <ul className='mt-6 divide-y divide-gray-200 border-t border-gray-200 text-sm font-medium text-muted-foreground'>
+                  {products.map((product) => {
                     const label = PRODUCT_CATEGORIES.find(
-                      ({ value }) =>
-                        value === product.category
+                      ({ value }) => value === product.category
                     )?.label
 
-                    const downloadUrl = (
-                      product.product_files as ProductFile
-                    ).url as string
+                    const downloadUrl =
+                      typeof product.product_files === 'string'
+                        ? product.product_files
+                        : (product.product_files as ProductFile)?.url || '#'
 
-                    const { image } = product.images[0]
+                    const firstImage = product.images?.[0]?.image
+                    const imageUrl =
+                      typeof firstImage === 'string'
+                        ? firstImage
+                        : firstImage?.url || null
 
                     return (
                       <li
                         key={product.id}
                         className='flex space-x-6 py-6'>
                         <div className='relative h-24 w-24'>
-                          {typeof image !== 'string' &&
-                          image.url ? (
+                          {imageUrl ? (
                             <Image
                               fill
-                              src={image.url}
+                              src={imageUrl}
                               alt={`${product.name} image`}
                               className='flex-none rounded-md bg-gray-100 object-cover object-center'
                             />
@@ -146,12 +129,17 @@ const ThankYouPage = async ({
 
                           {order._isPaid ? (
                             <a
-                              href={downloadUrl}
+                              id={`download-asset-${product.id}`}
+                              href={`/api/download?orderId=${order.id}&productId=${product.id}`}
                               download={product.name}
-                              className='text-blue-600 hover:underline underline-offset-2'>
-                              Download asset
+                              className='text-blue-600 font-medium hover:underline underline-offset-2 flex items-center gap-1'>
+                              Download asset &darr;
                             </a>
-                          ) : null}
+                          ) : (
+                            <span className='text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded inline-block w-fit'>
+                              Download unlocked upon confirmed payment
+                            </span>
+                          )}
                         </div>
 
                         <p className='flex-none font-medium text-gray-900'>
@@ -159,9 +147,9 @@ const ThankYouPage = async ({
                         </p>
                       </li>
                     )
-                  }
-                )}
-              </ul>
+                  })}
+                </ul>
+              ) : null}
 
               <div className='space-y-6 border-t border-gray-200 pt-6 text-sm font-medium text-muted-foreground'>
                 <div className='flex justify-between'>
@@ -188,7 +176,7 @@ const ThankYouPage = async ({
 
               <PaymentStatus
                 isPaid={order._isPaid}
-                orderEmail={(order.user as User).email}
+                orderEmail={orderEmail}
                 orderId={order.id}
               />
 

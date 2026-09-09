@@ -27,10 +27,10 @@ export function formatPrice(
 }
 
 export function constructMetadata({
-  title = 'DigitalHippo - the marketplace for digital assets',
-  description = 'DigitalHippo is an open-source marketplace for high-quality digital goods.',
-  image = '/thumbnail.png',
-  icons = '/favicon.ico',
+  title = 'Bovira - the marketplace for digital assets',
+  description = 'Bovira is an open-source marketplace for high-quality digital goods.',
+  image = 'https://res.cloudinary.com/cewhx4ry/image/upload/v1788942132/grok_1788941655698.jpg',
+  icons = 'https://res.cloudinary.com/cewhx4ry/image/upload/v1788942132/grok_1788941655698.jpg',
   noIndex = false,
 }: {
   title?: string
@@ -56,10 +56,10 @@ export function constructMetadata({
       title,
       description,
       images: [image],
-      creator: '@joshtriedcoding',
+      creator: '@bovira',
     },
     icons,
-    metadataBase: new URL('https://digitalhippo.up.railway.app'),
+    metadataBase: new URL('https://digitalhippo.netlify.app'),
     ...(noIndex && {
       robots: {
         index: false,

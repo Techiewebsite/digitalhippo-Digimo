@@ -12,28 +12,30 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
+import { useState } from 'react'
 
 import {
   AuthCredentialsValidator,
   TAuthCredentialsValidator,
 } from '@/lib/validators/account-credentials-validator'
-import { trpc } from '@/trpc/client'
 import { toast } from 'sonner'
-import { ZodError } from 'zod'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useAuth } from '@/hooks/use-auth'
 
 const Page = () => {
   const searchParams = useSearchParams()
   const router = useRouter()
   const isSeller = searchParams.get('as') === 'seller'
   const origin = searchParams.get('origin')
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const { signIn } = useAuth()
 
   const continueAsSeller = () => {
     router.push('?as=seller')
   }
 
   const continueAsBuyer = () => {
-    router.replace('/sign-in', undefined)
+    router.replace('/sign-in')
   }
 
   const {
@@ -44,37 +46,32 @@ const Page = () => {
     resolver: zodResolver(AuthCredentialsValidator),
   })
 
-  const { mutate: signIn, isLoading } =
-    trpc.auth.signIn.useMutation({
-      onSuccess: async () => {
-        toast.success('Signed in successfully')
-
-        router.refresh()
-
-        if (origin) {
-          router.push(`/${origin}`)
-          return
-        }
-
-        if (isSeller) {
-          router.push('/sell')
-          return
-        }
-
-        router.push('/')
-      },
-      onError: (err) => {
-        if (err.data?.code === 'UNAUTHORIZED') {
-          toast.error('Invalid email or password.')
-        }
-      },
-    })
-
-  const onSubmit = ({
+  const onSubmit = async ({
     email,
     password,
   }: TAuthCredentialsValidator) => {
-    signIn({ email, password })
+    setIsLoading(true)
+    try {
+      await signIn({ email, password })
+      toast.success('Signed in successfully')
+      router.refresh()
+
+      if (origin) {
+        router.push(`/${origin}`)
+        return
+      }
+
+      if (isSeller) {
+        router.push('/sell')
+        return
+      }
+
+      router.push('/')
+    } catch {
+      toast.error('Invalid email or password.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

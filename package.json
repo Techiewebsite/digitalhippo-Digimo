@@ -2,16 +2,10 @@
   "name": "digitalhippo",
   "version": "0.1.0",
   "private": true,
-  "main": "dist/server.js",
   "scripts": {
-    "dev": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts nodemon",
-    "generate:types": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts payload generate:types",
-    "build:payload": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts payload build",
-    "build:server": "tsc --project tsconfig.server.json",
-    "build:next": "cross-env PAYLOAD_CONFIG_PATH=dist/payload.config.js NEXT_BUILD=true node dist/server.js",
-    "build": "cross-env NODE_ENV=production npm run build:payload && npm run build:server && npm run copyfiles && npm run build:next",
-    "start": "cross-env PAYLOAD_CONFIG_PATH=dist/payload.config.js NODE_ENV=production node dist/server.js",
-    "copyfiles": "copyfiles -u 1 \"src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png}\" dist/",
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
     "lint": "next lint"
   },
   "overrides": {
@@ -19,6 +13,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
+    "@netlify/functions": "^6.0.0",
     "@payloadcms/bundler-webpack": "^1.0.5",
     "@payloadcms/db-mongodb": "^1.0.6",
     "@payloadcms/richtext-slate": "^1.1.0",
@@ -34,6 +29,7 @@
     "@trpc/next": "^10.43.1",
     "@trpc/react-query": "^10.43.1",
     "@trpc/server": "^10.43.1",
+    "appwrite": "^26.2.0",
     "body-parser": "^1.20.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
@@ -43,6 +39,7 @@
     "express": "^4.18.2",
     "lucide-react": "^0.292.0",
     "next": "14.0.1",
+    "node-appwrite": "^29.0.0",
     "nodemailer": "^6.9.7",
     "payload": "^2.0.15",
     "react": "^18",

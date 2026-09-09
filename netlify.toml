@@ -1,0 +1,45 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[[redirects]]
+  from = "/api/create-payment"
+  to = "/.netlify/functions/create-sebpay-payment"
+  status = 200
+
+[[redirects]]
+  from = "/api/create-sebpay-payment"
+  to = "/.netlify/functions/create-sebpay-payment"
+  status = 200
+
+[[redirects]]
+  from = "/api/verify-payment"
+  to = "/.netlify/functions/verify-sebpay-payment"
+  status = 200
+
+[[redirects]]
+  from = "/api/verify-sebpay-payment"
+  to = "/.netlify/functions/verify-sebpay-payment"
+  status = 200
+
+[[redirects]]
+  from = "/api/payment-callback"
+  to = "/.netlify/functions/sebpay-webhook"
+  status = 200
+
+[[redirects]]
+  from = "/api/sebpay-webhook"
+  to = "/.netlify/functions/sebpay-webhook"
+  status = 200
+
+[[redirects]]
+  from = "/api/payment-status"
+  to = "/.netlify/functions/payment-status"
+  status = 200
